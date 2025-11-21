@@ -9,6 +9,7 @@ import java.util.List;
 @RestController
 public class WebController {
 
+	
     @Autowired
     private StockMonitorService service;
 
@@ -35,4 +36,17 @@ public class WebController {
         // for now simply return true when called after /start:
         return true;
     }
+    
+    
+    
+    @GetMapping("/logs")
+    public java.util.List<String> logs() {
+        return service.getLogs();
+    }
+ 
+    @PostMapping("/clear")
+    public void clearLogs() {
+        service.clearLogs();
+    }
+   
 }

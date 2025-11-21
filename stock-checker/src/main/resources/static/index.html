@@ -1,38 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>IQOO Stock Monitor</title>
+    <title>Stock Monitor</title>
 </head>
 <body>
+
 <h2>IQOO Stock Monitor</h2>
 
-<textarea id="urls" rows="10" cols="80"
-          placeholder="Enter URLs, one per line"></textarea>
+<textarea id="urls" rows="10" cols="60"
+          placeholder="Enter URLs (one per line)"></textarea>
+
 <br><br>
+<button onclick="start()">START</button>
+<button onclick="stop()">STOP</button>
+<button onclick="clearLogs()">CLEAR LOGS</button>
 
-<button onclick="startMonitor()">START</button>
-<button onclick="stopMonitor()">STOP</button>
 
-<p id="status"></p>
+<h3>Live Logs</h3>
+<pre id="logBox" style="height:300px; overflow:auto; border:1px solid black;"></pre>
 
 <script>
-function startMonitor() {
-    const urls = document.getElementById("urls").value;
+function start() {
     fetch('/start', {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: urls
-    }).then(res => res.text())
-      .then(text => document.getElementById("status").innerText = text)
-      .catch(err => alert("Error: " + err));
+        headers: {'Content-Type': 'text/plain'},
+        body: document.getElementById('urls').value
+    });
 }
 
-function stopMonitor() {
-    fetch('/stop', { method: 'POST' })
-        .then(res => res.text())
-        .then(text => document.getElementById("status").innerText = text)
-        .catch(err => alert("Error: " + err));
+function stop() {
+    fetch('/stop', {method:'POST'});
 }
+
+setInterval(() => {
+    fetch('/logs')
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("logBox").textContent =
+                data.join("\n");
+        });
+}, 2000);
+
+function clearLogs() {
+    fetch('/clear', {method: 'POST'});
+    document.getElementById("logBox").textContent = "";
+}
+
 </script>
 
 </body>

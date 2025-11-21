@@ -17,15 +17,24 @@ public class StockMonitorService {
 
     private static final String BOT_TOKEN = "8268301332:AAF6LlMrEVBCkR9FaZ87nr8CIP0cNfynCqM";
     private static final String CHAT_ID = "1456153642";
+    private final java.util.List<String> logs =
+            new java.util.concurrent.CopyOnWriteArrayList<>();
+    public java.util.List<String> getLogs() {
+        return logs;
+    }
 
     private volatile boolean running = false;
     private ExecutorService pool;
 
     public synchronized void start(List<String> urls) {
         if (running) {
-            System.out.println("Already running");
+            logs.add("⚠️ Already running");
             return;
         }
+
+        // clear old logs and print start log
+        logs.clear();
+        logs.add("✅ Started monitoring");
 
         running = true;
         pool = Executors.newFixedThreadPool(urls.size());
@@ -40,18 +49,22 @@ public class StockMonitorService {
 
     public synchronized void stop() {
         running = false;
+
         if (pool != null) {
             pool.shutdownNow();
             pool = null;
         }
-        System.out.println("Monitoring stopped");
-    }
 
+        logs.add("🛑 Monitoring stopped");
+    }
+    
     private void monitor(String url) {
-        System.out.println("Monitoring started for: " + url);
+        logs.add("Monitoring started for: " + url);
 
         while (running) {
             try {
+                logs.add("Checking: " + url);
+
                 Document doc = Jsoup.connect(url)
                         .userAgent("Mozilla/5.0")
                         .timeout(5000)
@@ -60,24 +73,24 @@ public class StockMonitorService {
                 Element button = doc.selectFirst("div.btn-buynow.btn");
                 String text = button != null ? button.text().trim() : "";
 
-                System.out.println("[" + url + "] Status: " + text);
+                logs.add("[" + url + "] Status: " + text);
 
                 if ("Buy Now".equalsIgnoreCase(text)) {
-                    System.out.println("🎉 BUY NOW AVAILABLE! URL: " + url);
+                    logs.add("✅ BUY NOW AVAILABLE! URL: " + url);
                     sendTelegramMessage("BUY NOW available at: " + url);
                     break; // stop for this URL
                 }
 
                 Thread.sleep(1000); // refresh every 1 second
             } catch (Exception e) {
-                System.out.println("Error while checking " + url);
-                // optional: e.printStackTrace();
+                logs.add("❌ Error while checking " + url);
                 try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
             }
         }
 
-        System.out.println("Stopped monitoring: " + url);
+        logs.add("Stopped monitoring: " + url);
     }
+
 
     private void sendTelegramMessage(String message) {
         try {
@@ -94,4 +107,11 @@ public class StockMonitorService {
             e.printStackTrace();
         }
     }
+  
+
+	public void clearLogs() {
+		// TODO Auto-generated method stub
+		logs.clear();
+	}
+
 }
