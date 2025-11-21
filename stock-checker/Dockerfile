@@ -1,5 +1,14 @@
 FROM eclipse-temurin:17
+
 WORKDIR /app
+
 COPY . .
-RUN ./mvnw clean package -DskipTests || mvn clean package -DskipTests
+
+# Give execute permission to mvnw
+RUN chmod +x mvnw
+
+# Build the project
+RUN ./mvnw clean package -DskipTests
+
+# Run the jar
 CMD ["java", "-jar", "target/stock-checker-0.0.1-SNAPSHOT.jar"]
