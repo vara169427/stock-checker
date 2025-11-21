@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IQOO Stock Monitor</title>
+</head>
+<body>
+<h2>IQOO Stock Monitor</h2>
+
+<textarea id="urls" rows="10" cols="80"
+          placeholder="Enter URLs, one per line"></textarea>
+<br><br>
+
+<button onclick="startMonitor()">START</button>
+<button onclick="stopMonitor()">STOP</button>
+
+<p id="status"></p>
+
+<script>
+function startMonitor() {
+    const urls = document.getElementById("urls").value;
+    fetch('/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: urls
+    }).then(res => res.text())
+      .then(text => document.getElementById("status").innerText = text)
+      .catch(err => alert("Error: " + err));
+}
+
+function stopMonitor() {
+    fetch('/stop', { method: 'POST' })
+        .then(res => res.text())
+        .then(text => document.getElementById("status").innerText = text)
+        .catch(err => alert("Error: " + err));
+}
+</script>
+
+</body>
+</html>
