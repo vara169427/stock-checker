@@ -3,50 +3,57 @@ package iq.stock_checker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class WebController {
 
-	
     @Autowired
     private StockMonitorService service;
 
     @PostMapping("/start")
-    public String start(@RequestBody String body) {
-        List<String> urls = Arrays.asList(body.split("\\r?\\n"));
+    public void start(@RequestBody(required = false) String body) {
+        if (body == null || body.trim().isEmpty()) {
+            service.getLiveLogs().add("⚠️ No URLs provided");
+            return;
+        }
+        List<String> urls = List.of(body.split("\\R"));
         service.start(urls);
-        return "Started monitoring " + urls.size() + " URL(s)";
     }
 
     @PostMapping("/stop")
-    public String stop() {
+    public void stop() {
         service.stop();
-        return "Stopped monitoring";
     }
 
-    @GetMapping("/status")
-    public String status() {
-        return "Service is " + (isRunning() ? "RUNNING" : "STOPPED");
+    @GetMapping("/logs/live")
+    public List<String> liveLogs() {
+        return service.getLiveLogs();
     }
 
-    private boolean isRunning() {
-        // quick hack: ask service via side-effect (you can improve later)
-        // for now simply return true when called after /start:
-        return true;
+    @GetMapping("/logs/buynow")
+    public List<String> buyNowLogs() {
+        return service.getBuyNowLogs();
     }
-    
-    
-    
-    @GetMapping("/logs")
-    public java.util.List<String> logs() {
-        return service.getLogs();
+
+    @PostMapping("/logs/live/clear")
+    public void clearLive() {
+        service.clearLiveLogs();
     }
- 
-    @PostMapping("/clear")
-    public void clearLogs() {
-        service.clearLogs();
+
+    @PostMapping("/logs/buynow/clear")
+    public void clearBuyNow() {
+        service.clearBuyNowLogs();
     }
-   
+
+    @GetMapping("/xpaths")
+    public Map<String, String> getXpath() {
+        return Map.of("buyNow", service.getBuyNowXpath());
+    }
+
+    @PostMapping("/xpaths")
+    public void updateXpath(@RequestBody Map<String, String> body) {
+        service.setBuyNowXpath(body.get("buyNow"));
+    }
 }
